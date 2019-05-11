@@ -76,6 +76,3 @@ df=catScraper('https://www.jumia.co.ke/smartphones/?sort=popularity&dir=desc',25
 
 df.to_csv('Smartphones.csv')
 
-import datetime
-
-print(datetime.datetime.now())
