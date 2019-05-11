@@ -2,6 +2,8 @@ import json
 import requests as req
 import pandas as pd
 import random
+from bs4 import BeautifulSoup as soup
+import time
 
 
 def getHeader():
@@ -22,7 +24,10 @@ def getHeader():
 
 
 
-def maxRevFinder(url):
+def RevFinder(url):
+    ''' takes a Jumia products page and extracts the ratings as percentages 
+    and number of reviews. Returns a pandas dataframe of Name,
+    product identifier, link,ratings and reviews'''
     page=soup(req.get(url,headers=getHeader() ).text,'lxml')
     containers=page.findAll('div',{'class':'-gallery'})
     a=pd.DataFrame(columns=('Name','Brand','SKU','Link','Rating','Reviews'))
@@ -50,14 +55,27 @@ def maxRevFinder(url):
     return a
 
 
-df1=pd.DataFrame(columns=('Name','Brand','SKU','Link','Rating','Reviews'))
-for j in range(1,26):
-    url=('https://www.jumia.co.ke/smartphones/?sort=popularity&dir=desc&page={}'.format(j))
-    d1=maxRevFinder(url)
-    df1=pd.concat([df1,d1],ignore_index=True)
+def catScraper(url,pages):
+    df1=pd.DataFrame(columns=('Name','Brand','SKU','Link','Rating','Reviews'))
+    for j in range(1,pages+1):
+        try:
+            url=(url+'&page={}')
+            url=url.format(j)
+            d1=RevFinder(url)
+            df1=pd.concat([df1,d1],ignore_index=True)
+        except :
+            url=(url+'&page={}')
+            url=url.format(j)
+            d1=RevFinder(url)
+            df1=pd.concat([df1,d1],ignore_index=True)            
+    return df1
 
 
-df1.sort_values(by=['Reviews'], inplace=True,ascending=False)
-df1['Rating']=pd.to_numeric(df1['Rating'])
+df=catScraper('https://www.jumia.co.ke/smartphones/?sort=popularity&dir=desc',25)
 
-df1['Reviews']=pd.to_numeric(df1['Reviews'])
+
+df.to_csv('Smartphones.csv')
+
+import datetime
+
+print(datetime.datetime.now())
